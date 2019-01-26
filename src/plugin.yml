@@ -1,0 +1,5 @@
+name: DenseStorage
+version: 0.3
+author: Terminator_NL
+main: cf.terminator.densestorage.DenseStorage
+api-version: 1.13
