@@ -2,14 +2,13 @@ package cf.terminator.densestorage.inventory;
 
 import cf.terminator.densestorage.throwables.InvalidMinecraftVersionException;
 import cf.terminator.densestorage.util.NBTUtils;
-import net.minecraft.server.v1_13_R2.NBTTagCompound;
+import net.minecraft.server.v1_14_R1.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Utility;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
-import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftMetaBook;
+import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -18,10 +17,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.MaterialData;
 
 import javax.annotation.Nonnull;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Map;
 
 /**
@@ -40,7 +36,7 @@ public class ItemDescriptor implements Comparable<ItemDescriptor>{
     private static final Field NBT_EXTRACT_METHOD;
     static {
         try {
-            CRAFT_META_ITEM_CLASS = Class.forName("org.bukkit.craftbukkit.v1_13_R2.inventory.CraftMetaItem");
+            CRAFT_META_ITEM_CLASS = Class.forName("org.bukkit.craftbukkit.v1_14_R1.inventory.CraftMetaItem");
             NBT_EXTRACT_METHOD = CRAFT_META_ITEM_CLASS.getDeclaredField("internalTag");
             NBT_EXTRACT_METHOD.setAccessible(true);
         } catch (Exception e) {
@@ -174,7 +170,7 @@ public class ItemDescriptor implements Comparable<ItemDescriptor>{
         if(equals(o)){
             return 0;
         }
-        int c = Integer.compare(o.type.getId(), this.type.getId());
+        int c = Integer.compare(o.type.ordinal(), this.type.ordinal());
         if (c != 0) {
             return c;
         }
@@ -188,8 +184,8 @@ public class ItemDescriptor implements Comparable<ItemDescriptor>{
 
         try {
 
-            net.minecraft.server.v1_13_R2.ItemStack stackOne = CraftItemStack.asNMSCopy(this.getItemStack(1));
-            net.minecraft.server.v1_13_R2.ItemStack stackTwo = CraftItemStack.asNMSCopy(o.getItemStack(1));
+            net.minecraft.server.v1_14_R1.ItemStack stackOne = CraftItemStack.asNMSCopy(this.getItemStack(1));
+            net.minecraft.server.v1_14_R1.ItemStack stackTwo = CraftItemStack.asNMSCopy(o.getItemStack(1));
 
             NBTTagCompound thisTag = stackOne.save(new NBTTagCompound());
             NBTTagCompound thatTag = stackTwo.save(new NBTTagCompound());

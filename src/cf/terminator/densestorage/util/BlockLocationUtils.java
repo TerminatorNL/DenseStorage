@@ -1,6 +1,6 @@
 package cf.terminator.densestorage.util;
 
-import net.minecraft.server.v1_13_R2.BlockPosition;
+import net.minecraft.server.v1_14_R1.BlockPosition;
 import org.bukkit.Location;
 
 public class BlockLocationUtils {

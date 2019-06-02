@@ -4,17 +4,17 @@ import cf.terminator.densestorage.DenseStorage;
 import cf.terminator.densestorage.inventory.DenseChestInventory;
 import cf.terminator.densestorage.throwables.InvalidMinecraftVersionException;
 import cf.terminator.densestorage.util.BlockFaceUtils;
-import net.minecraft.server.v1_13_R2.NBTTagCompound;
-import net.minecraft.server.v1_13_R2.NBTTagList;
+import net.minecraft.server.v1_14_R1.NBTTagCompound;
+import net.minecraft.server.v1_14_R1.NBTTagList;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Directional;
-import org.bukkit.craftbukkit.v1_13_R2.block.CraftBlockEntityState;
-import org.bukkit.craftbukkit.v1_13_R2.block.CraftDropper;
-import org.bukkit.craftbukkit.v1_13_R2.block.CraftSkull;
-import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_14_R1.block.CraftBlockEntityState;
+import org.bukkit.craftbukkit.v1_14_R1.block.CraftDropper;
+import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
@@ -44,9 +44,12 @@ public class DenseChest {
         if(disk != null){
             if(disk.getType() == Material.MUSIC_DISC_13 && disk.getEnchantments().containsKey(Enchantment.LOOT_BONUS_BLOCKS)) {
                 ItemMeta meta = disk.getItemMeta();
+                if(meta == null){
+                    throw new IllegalStateException("Disk metadata was null! Did the minecraft version change?");
+                }
                 meta.setLore(MemoryDisk.getLore(amountStored));
                 disk.setItemMeta(meta);
-                net.minecraft.server.v1_13_R2.ItemStack diskCopy = CraftItemStack.asNMSCopy(disk);
+                net.minecraft.server.v1_14_R1.ItemStack diskCopy = CraftItemStack.asNMSCopy(disk);
                 NBTTagCompound root = diskCopy.getOrCreateTag();
                 root.set("DenseStorageData", denseStorageData);
                 diskCopy.setTag(root);
@@ -54,7 +57,11 @@ public class DenseChest {
                 return true;
             }else{
                 dropper.getInventory().setItem(0, new ItemStack(Material.AIR));
-                dropper.getLocation().getWorld().dropItem(dropper.getLocation(), disk);
+                World world = dropper.getLocation().getWorld();
+                if(world == null){
+                    throw new IllegalStateException("World was null! Did the minecraft version change?");
+                }
+                world.dropItem(dropper.getLocation(), disk);
             }
         }
         return false;
@@ -101,7 +108,7 @@ public class DenseChest {
             if(MemoryCore.OWNER.equals(ownerTag.getString("Id"))){
                 NBTTagCompound propertiesTag = ownerTag.getCompound("Properties");
                 NBTTagList texturesTag = (NBTTagList) propertiesTag.get("textures");
-                if(MemoryCore.TEXTURE.equals(texturesTag.getCompound(0).getString("Value"))){
+                if(texturesTag != null && MemoryCore.TEXTURE.equals(texturesTag.getCompound(0).getString("Value"))){
                     return true;
                 }
             }
@@ -264,7 +271,11 @@ public class DenseChest {
         assert trapDoor != null;
 
         coreBlock.setType(Material.AIR);
-        coreBlock.getLocation().getWorld().dropItemNaturally(coreBlock.getLocation(), DenseChest.MemoryCore.getSkull());
+        World world = coreBlock.getLocation().getWorld();
+        if(world == null){
+            throw new IllegalStateException("World was null! Did the minecraft version change?");
+        }
+        world.dropItemNaturally(coreBlock.getLocation(), DenseChest.MemoryCore.getSkull());
 
         for(Block block : droppers){
             CraftDropper dropper = (CraftDropper) block.getState();
@@ -388,12 +399,16 @@ public class DenseChest {
         private static final String DISPLAY_NAME = "§r§l§eDense core";
         private static final List<String> LORE = Arrays.asList(
                 "§r1: §7Place four droppers facing inwards",
-                "§r2: §7At the side of every hopper, place",
+                "§r2: §7At the side of every dropper, place",
                 "§r   §7one redstone block on the same side.",
                 "§r3: §7Between the redstone blocks, place an iron",
                 "§r   §7trapdoor closest to the droppers",
                 "§r4: §7Place me on the iron trapdoor",
-                "§r5: §7Click me!"
+                "§r5: §7Click me!",
+                "",
+                "§7   Tip: You can also insert items into this chest",
+                "§7        using hoppers. Simply place a hopper",
+                "§7        facing into any of the four droppers."
         );
 
         private static ItemStack skull;
@@ -417,12 +432,15 @@ public class DenseChest {
                 skullOwnerTag.setString("Id",OWNER);
 
                 root.set("SkullOwner", skullOwnerTag);
-                net.minecraft.server.v1_13_R2.ItemStack skull = CraftItemStack.asNMSCopy(new ItemStack(Material.PLAYER_HEAD));
+                net.minecraft.server.v1_14_R1.ItemStack skull = CraftItemStack.asNMSCopy(new ItemStack(Material.PLAYER_HEAD));
 
                 skull.setTag(root);
 
                 MemoryCore.skull = CraftItemStack.asBukkitCopy(skull);
                 ItemMeta meta = MemoryCore.skull.getItemMeta();
+                if(meta == null){
+                    throw new IllegalStateException("Meta was null! Did the minecraft version change?");
+                }
                 meta.setDisplayName(DISPLAY_NAME);
 
                 meta.setLore(LORE);
@@ -465,13 +483,16 @@ public class DenseChest {
             }
             ItemStack disk = new ItemStack(Material.MUSIC_DISC_13);
             ItemMeta meta = disk.getItemMeta();
+            if(meta == null){
+                throw new IllegalStateException("Meta was null! Did the minecraft version change?");
+            }
             meta.setDisplayName(DISPLAY_NAME);
             meta.setLore(LORE);
             meta.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 1, true);
             meta.addItemFlags(ItemFlag.values());
             disk.setItemMeta(meta);
 
-            net.minecraft.server.v1_13_R2.ItemStack stack = CraftItemStack.asNMSCopy(disk);
+            net.minecraft.server.v1_14_R1.ItemStack stack = CraftItemStack.asNMSCopy(disk);
             NBTTagCompound root = stack.getOrCreateTag();
             root.set("DenseStorageData", new NBTTagCompound());
             stack.setTag(root);

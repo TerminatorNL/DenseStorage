@@ -1,22 +1,14 @@
 package cf.terminator.densestorage.event;
 
-import cf.terminator.densestorage.DenseStorage;
 import cf.terminator.densestorage.block.densechest.DenseChest;
-import cf.terminator.densestorage.inventory.BaseInventory;
+import cf.terminator.densestorage.inventory.BaseCraftInventory;
 import cf.terminator.densestorage.inventory.DenseChestInventory;
-import net.minecraft.server.v1_13_R2.EntityPlayer;
-import net.minecraft.server.v1_13_R2.IInventory;
-import net.minecraft.server.v1_13_R2.TileEntityDropper;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Directional;
-import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftInventory;
-import org.bukkit.craftbukkit.v1_13_R2.inventory.InventoryWrapper;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -27,8 +19,7 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
-
-import java.lang.reflect.Field;
+import org.bukkit.inventory.ItemStack;
 
 public class Listener implements org.bukkit.event.Listener {
 
@@ -39,11 +30,17 @@ public class Listener implements org.bukkit.event.Listener {
         if(event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getHand() == EquipmentSlot.HAND && event.getPlayer().isSneaking() == false) {
             Block clickedBlock = event.getClickedBlock();
             Block coreBlock;
-            if(clickedBlock.getType() == Material.DROPPER){
+            if(clickedBlock != null && clickedBlock.getType() == Material.DROPPER) {
                 Directional data = (Directional) clickedBlock.getBlockData();
                 coreBlock = clickedBlock.getRelative(data.getFacing());
+            }else if(clickedBlock != null && clickedBlock.getType() == Material.IRON_TRAPDOOR){
+                Directional data = (Directional) clickedBlock.getBlockData();
+                coreBlock = clickedBlock.getRelative(data.getFacing().getOppositeFace());
             }else{
                 coreBlock = clickedBlock;
+            }
+            if(coreBlock == null){
+                return;
             }
             if(DenseChest.isDenseChestHead(coreBlock)){
                 event.setCancelled(true);
@@ -60,11 +57,14 @@ public class Listener implements org.bukkit.event.Listener {
         if(event.getAction() == Action.LEFT_CLICK_BLOCK && event.getHand() == EquipmentSlot.HAND && event.getPlayer().isSneaking() == false) {
             Block clickedBlock = event.getClickedBlock();
             Block coreBlock;
-            if (clickedBlock.getType() == Material.DROPPER) {
+            if (clickedBlock != null && clickedBlock.getType() == Material.DROPPER) {
                 Directional data = (Directional) clickedBlock.getBlockData();
                 coreBlock = clickedBlock.getRelative(data.getFacing());
             } else {
                 coreBlock = clickedBlock;
+            }
+            if(coreBlock == null){
+                return;
             }
             if(DenseChest.isDenseChestHead(coreBlock)){
                 event.setCancelled(true);
@@ -138,7 +138,11 @@ public class Listener implements org.bukkit.event.Listener {
 
     @EventHandler
     public void onDispense(InventoryMoveItemEvent event) {
-        Block dispenser = event.getDestination().getLocation().getBlock();
+        Location destination = event.getDestination().getLocation();
+        if(destination == null){
+            return;
+        }
+        Block dispenser = destination.getBlock();
         if (dispenser.getType() == Material.DROPPER) {
             Directional data = (Directional) dispenser.getBlockData();
             Block coreBlock = dispenser.getRelative(data.getFacing());
@@ -152,47 +156,31 @@ public class Listener implements org.bukkit.event.Listener {
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent e){
         Inventory inventory = e.getInventory();
-        if(inventory instanceof BaseInventory){
-            ((BaseInventory) inventory).notifyPlayerInventoryClose(e.getPlayer());
+        if(inventory instanceof BaseCraftInventory){
+            ((BaseCraftInventory) inventory).notifyPlayerInventoryClose(e.getPlayer());
         }
     }
 
     @EventHandler
     public void onInventoryOpen(InventoryOpenEvent e){
-
-        BaseInventory inventory = getBaseInventory(e.getInventory());
+        BaseCraftInventory inventory = getBaseInventory(e.getInventory());
         if(inventory != null){
            inventory.notifyPlayerInventoryOpen(e.getPlayer());
         }
     }
 
-    private static BaseInventory getBaseInventory(Inventory topInventory){
-        if(topInventory instanceof CraftInventory){
-            IInventory secondInventory = ((CraftInventory) topInventory).getInventory();
-            if(secondInventory instanceof InventoryWrapper){
-                /*
-                Why the fuck do I need to do this? Cmon' bukkit...
-                 */
-                Inventory thirdInventory = null;
-                try {
-                    Field trueInventory = InventoryWrapper.class.getDeclaredField("inventory");
-                    trueInventory.setAccessible(true);
-                    thirdInventory = (Inventory) trueInventory.get(secondInventory);
-                } catch (Throwable e1) {
-                    e1.printStackTrace();
-                }
-                if(thirdInventory instanceof BaseInventory){
-                    return ((BaseInventory) thirdInventory);
-                }
-            }
+    private static BaseCraftInventory getBaseInventory(Inventory inventory){
+        if(inventory instanceof BaseCraftInventory){
+            return (BaseCraftInventory) inventory;
+        }else{
+            return null;
         }
-        return null;
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent e){
         Inventory topInventory = e.getInventory();
-        BaseInventory inventory = getBaseInventory(topInventory);
+        BaseCraftInventory inventory = getBaseInventory(topInventory);
         if(inventory != null){
             inventory.onInventoryClick(e);
         }
@@ -202,7 +190,8 @@ public class Listener implements org.bukkit.event.Listener {
             if(coreBlock != null) {
                 if(e.getRawSlot() < e.getView().getTopInventory().getSize()) {
                     DenseChestInventory denseChestInventory = DenseChest.getInventory(coreBlock, e.getWhoClicked());
-                    if (denseChestInventory != null && e.getCurrentItem().getType() == Material.MUSIC_DISC_13 && e.getCurrentItem().getEnchantments().containsKey(Enchantment.LOOT_BONUS_BLOCKS)) {
+                    ItemStack currentItem = e.getCurrentItem();
+                    if (denseChestInventory != null && currentItem != null && currentItem.getType() == Material.MUSIC_DISC_13 && currentItem.getEnchantments().containsKey(Enchantment.LOOT_BONUS_BLOCKS)){
                         denseChestInventory.unLinkInventory(e.getWhoClicked());
                     }
                 }
@@ -212,7 +201,7 @@ public class Listener implements org.bukkit.event.Listener {
 
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent e){
-        BaseInventory inventory = getBaseInventory(e.getInventory());
+        BaseCraftInventory inventory = getBaseInventory(e.getInventory());
         if(inventory != null){
             inventory.onInventoryDrag(e);
         }

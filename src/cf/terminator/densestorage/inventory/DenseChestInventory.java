@@ -3,18 +3,17 @@ package cf.terminator.densestorage.inventory;
 import cf.terminator.densestorage.DenseStorage;
 import cf.terminator.densestorage.block.densechest.DenseChest;
 import cf.terminator.densestorage.util.PlayerUtils;
-import net.minecraft.server.v1_13_R2.NBTBase;
-import net.minecraft.server.v1_13_R2.NBTTagCompound;
-import net.minecraft.server.v1_13_R2.NBTTagList;
-import net.minecraft.server.v1_13_R2.ParticleType;
+import net.minecraft.server.v1_14_R1.NBTBase;
+import net.minecraft.server.v1_14_R1.NBTTagCompound;
+import net.minecraft.server.v1_14_R1.NBTTagList;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.craftbukkit.v1_13_R2.block.CraftDropper;
-import org.bukkit.craftbukkit.v1_13_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_14_R1.block.CraftDropper;
+import org.bukkit.craftbukkit.v1_14_R1.inventory.CraftItemStack;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -26,7 +25,7 @@ import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
-public class DenseChestInventory extends BaseInventory {
+public class DenseChestInventory extends BaseCraftInventory {
 
     private static final int MAX_STACK_COUNT = 45;
     private static final int MAX_STACK_SIZE = Integer.MAX_VALUE;
@@ -35,7 +34,7 @@ public class DenseChestInventory extends BaseInventory {
     static {
         try {
             //noinspection unchecked
-            Class<ItemMeta> itemMetaClass = (Class<ItemMeta>) Class.forName("org.bukkit.craftbukkit.v1_13_R2.inventory.CraftMetaItem");
+            Class<ItemMeta> itemMetaClass = (Class<ItemMeta>) Class.forName("org.bukkit.craftbukkit.v1_14_R1.inventory.CraftMetaItem");
             CRAFT_META_ITEM_CONSTRUCTOR = itemMetaClass.getDeclaredConstructor(NBTTagCompound.class);
             CRAFT_META_ITEM_CONSTRUCTOR.setAccessible(true);
         } catch (Exception e) {
@@ -137,7 +136,7 @@ public class DenseChestInventory extends BaseInventory {
         }
         for (NBTBase stackTag_ : list) {
             NBTTagCompound stackTag = (NBTTagCompound) stackTag_;
-            net.minecraft.server.v1_13_R2.ItemStack itemStack = net.minecraft.server.v1_13_R2.ItemStack.a(stackTag);
+            net.minecraft.server.v1_14_R1.ItemStack itemStack = net.minecraft.server.v1_14_R1.ItemStack.a(stackTag);
             int amount = stackTag.getInt("Stored");
             ItemStack stack = CraftItemStack.asBukkitCopy(itemStack);
             BACKING_DATA.put(new ItemDescriptor(stack), amount);
@@ -151,7 +150,7 @@ public class DenseChestInventory extends BaseInventory {
         for (Map.Entry<ItemDescriptor, Integer> e : BACKING_DATA.entrySet()) {
             NBTTagCompound stackTag = new NBTTagCompound();
             ItemStack rawStack = e.getKey().getItemStack(1);
-            net.minecraft.server.v1_13_R2.ItemStack stack = CraftItemStack.asNMSCopy(rawStack);
+            net.minecraft.server.v1_14_R1.ItemStack stack = CraftItemStack.asNMSCopy(rawStack);
             stackTag.setInt("Stored", e.getValue());
             list.add(stack.save(stackTag));
         }

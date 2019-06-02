@@ -2,7 +2,6 @@ package cf.terminator.densestorage.util;
 
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;

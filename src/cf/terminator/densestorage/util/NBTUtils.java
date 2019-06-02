@@ -1,9 +1,12 @@
 package cf.terminator.densestorage.util;
 
-import net.minecraft.server.v1_13_R2.NBTBase;
+import net.minecraft.server.v1_14_R1.NBTBase;
 
 import javax.annotation.Nonnull;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 public class NBTUtils {
     public static int compare(@Nonnull NBTBase one, @Nonnull NBTBase two){
